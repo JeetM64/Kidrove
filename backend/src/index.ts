@@ -10,8 +10,13 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with optional production configuration
+const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : '*';
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 
 // Middleware for parsing JSON requests
 app.use(express.json());

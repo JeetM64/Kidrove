@@ -81,8 +81,9 @@ export default function RegistrationForm() {
     setStatus('loading');
     setApiMessage('');
 
+    const API_URL = (import.meta.env.VITE_API_URL as string) || '';
     try {
-      const response = await fetch('/api/enquiry', {
+      const response = await fetch(`${API_URL}/api/enquiry`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
