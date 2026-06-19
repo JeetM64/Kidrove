@@ -34,9 +34,10 @@ export default function RegistrationForm() {
         if (!emailRegex.test(value.trim())) return 'Please enter a valid email address.';
         return '';
       case 'phone':
-        if (!value.trim()) return 'Phone number is required.';
+        const cleanPhone = value.replace(/\s+/g, '');
+        if (!cleanPhone) return 'Phone number is required.';
         const phoneRegex = /^[0-9]{10}$/;
-        if (!phoneRegex.test(value.trim())) return 'Phone number must be exactly 10 digits.';
+        if (!phoneRegex.test(cleanPhone)) return 'Phone number must be exactly 10 digits.';
         return '';
       default:
         return '';
@@ -47,7 +48,6 @@ export default function RegistrationForm() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     
-    // Validate on type/change
     const errorMsg = validateField(name as keyof FormFields, value);
     setErrors((prev) => ({ ...prev, [name]: errorMsg }));
   };
@@ -61,7 +61,6 @@ export default function RegistrationForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Perform validation on all fields
     const newErrors: FormErrors = {};
     Object.keys(formData).forEach((key) => {
       const fieldName = key as keyof FormFields;
@@ -73,22 +72,30 @@ export default function RegistrationForm() {
 
     setErrors(newErrors);
 
-    // If there are validation errors, block submission
-    if (Object.values(newErrors).some((error) => error !== '')) {
+    if (Object.values(newErrors).some((error) => error && error !== '')) {
       return;
     }
 
     setStatus('loading');
     setApiMessage('');
 
-    const API_URL = (import.meta.env.VITE_API_URL as string) || '';
+    // Dynamically look for the injected environment variable, fallback gracefully to port 5000
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    
+    // Sanitize values cleanly before sending over HTTP wire
+    const payload = {
+      name: formData.name.trim(),
+      email: formData.email.trim().toLowerCase(),
+      phone: formData.phone.replace(/\s+/g, '')
+    };
+
     try {
       const response = await fetch(`${API_URL}/api/enquiry`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -109,15 +116,13 @@ export default function RegistrationForm() {
 
   return (
     <section id="registration-section" className="py-20 bg-slate-900 text-white relative overflow-hidden scroll-mt-6">
-      {/* Visual background rings */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-slate-800 rounded-full pointer-events-none opacity-20"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border border-slate-800 rounded-full pointer-events-none opacity-10"></div>
       
       <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Success State Visual Overlay */}
         {status === 'success' ? (
-          <div className="bg-slate-800 border border-slate-700/60 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-2xl animate-float">
+          <div className="bg-slate-800 border border-slate-700/60 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-2xl transition-all">
             <div className="inline-flex p-4 bg-teal-500/10 rounded-full text-teal-400">
               <CheckCircle2 className="w-16 h-16" />
             </div>
@@ -140,7 +145,6 @@ export default function RegistrationForm() {
         ) : (
           <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/60 rounded-3xl p-8 shadow-2xl space-y-8">
             
-            {/* Header text */}
             <div className="text-center">
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
                 Secure Your Spot Today
@@ -150,7 +154,6 @@ export default function RegistrationForm() {
               </p>
             </div>
 
-            {/* API Error Box */}
             {status === 'error' && (
               <div className="flex gap-3 bg-rose-500/15 border border-rose-500/20 text-rose-300 p-4 rounded-xl text-sm items-start">
                 <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
@@ -158,10 +161,8 @@ export default function RegistrationForm() {
               </div>
             )}
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>
               
-              {/* Name Field */}
               <div className="space-y-2">
                 <label htmlFor="reg-name" className="block text-sm font-semibold text-slate-300">
                   Full Name
@@ -192,7 +193,6 @@ export default function RegistrationForm() {
                 )}
               </div>
 
-              {/* Email Field */}
               <div className="space-y-2">
                 <label htmlFor="reg-email" className="block text-sm font-semibold text-slate-300">
                   Email Address
@@ -223,7 +223,6 @@ export default function RegistrationForm() {
                 )}
               </div>
 
-              {/* Phone Field */}
               <div className="space-y-2">
                 <label htmlFor="reg-phone" className="block text-sm font-semibold text-slate-300">
                   Phone Number
@@ -254,7 +253,6 @@ export default function RegistrationForm() {
                 )}
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 id="reg-submit-btn"
@@ -276,7 +274,6 @@ export default function RegistrationForm() {
             </form>
           </div>
         )}
-
       </div>
     </section>
   );
