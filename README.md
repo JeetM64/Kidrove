@@ -25,7 +25,7 @@ A high-converting, fully responsive landing page for "Kidrove" (an organization 
     └── src/routes/enquiry.ts - Server router and input validation rules
 ```
 
-## Getting Started
+
 
 ### Prerequisites
 
